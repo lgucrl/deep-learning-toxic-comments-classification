@@ -33,19 +33,21 @@ In addition to the label columns, an aggregated field (`sum_injurious`) is used 
    The cleaned comments are converted into sequences of token IDs using `tf.keras.layers.TextVectorization`. The vocabulary size is capped to cover **90%** of word occurrences, and the output sequence length is set to the **95th percentile** of comment length to increase efficiency without excessive truncation. This results in uniform tensors (`(N, 230)` sequences) suitable for recurrent layers.
 
 5. **Handling class imbalance with multi-label oversampling**  
-   Because toxicity labels are highly imbalanced, the training set is balanced via **MLSMOTE** (Multi-Label SMOTE). :contentReference[oaicite:14]{index=14} The approach generates synthetic samples for minority/toxic label combinations and then merges them with a sampled subset of clean comments to target a ~50/50 clean-to-toxic training distribution, while explicitly keeping the **test set unmodified** for realistic evaluation. :contentReference[oaicite:15]{index=15}
+   To improve learning on the highly imbalanced toxicity labels and mitigate the dominance of clean comments, the training set is balanced with **MLSMOTE** (Multi-Label SMOTE). The approach generates synthetic samples for minority (toxic) label combinations and then merges them with a sampled subset of clean comments to target a 50/50 clean-to-toxic training distribution, while explicitly keeping the **test set unmodified** for a realistic evaluation. Because the synthetic process can produce non-integer token values, generated sequences are rounded and clipped to valid token ID ranges.
 
-   To mitigate the dominance of clean comments and improve learning on minority labels, the training set is balanced with MLSMOTE (Multi-Label SMOTE). Synthetic samples are generated for minority/toxic combinations and then combined with a sampled subset of clean comments to target a ~50/50 clean-to-toxic training distribution. Because the synthetic process can produce non-integer token values, generated sequences are rounded and clipped to valid token ID ranges before modeling.
-
-   ---
-
-6. **Model design and training (RNN with Bidirectional GRUs)**  
-   The network uses an **Embedding** layer (with masking for padding token 0), **SpatialDropout1D** regularization, and stacked **Bidirectional GRU** layers to capture context from both directions in the sequence. :contentReference[oaicite:16]{index=16} A dense head ends with a **sigmoid** layer producing six independent probabilities (one per label). :contentReference[oaicite:17]{index=17} The model is trained with **binary cross-entropy** and optimized with **Adam**, tracking metrics such as accuracy, precision, recall, and weighted F1, with **early stopping** on validation loss. :contentReference[oaicite:18]{index=18}
+6. **Model design and training**  
+   The classifier is a recurrent neural network with an **Embedding** layer (with masking for padding token 0), **SpatialDropout1D** regularization, and stacked **Bidirectional GRU** layers to capture context from both directions in the sequence. A final **dense** layer with **sigmoid** outputs produces six independent probabilities (one per label). The model is trained with **binary cross-entropy** and optimized with **Adam**, tracking metrics such as accuracy, precision, recall, and weighted F1, with **early stopping** on validation performance.
 
 7. **Evaluation on test set and prediction examples**  
-   After training, evaluation is performed on the **original (unbalanced) test set** by computing probability outputs, converting them to binary predictions with a **0.5 threshold**, and reporting overall (weighted) metrics plus per-label metrics. :contentReference[oaicite:19]{index=19} Performance is further analyzed with **confusion matrices** and threshold-sensitive curves such as **ROC** and **Precision–Recall** (especially informative under heavy imbalance). :contentReference[oaicite:20]{index=20} :contentReference[oaicite:21]{index=21}  
-   To make the model easier to “try out,” the project also implements a small inference utility that takes an arbitrary text comment, applies the same **cleaning + vectorization** pipeline, runs the model to obtain probabilities and binary decisions, and visualizes label probabilities in a bar chart with a horizontal threshold line. :contentReference[oaicite:22]{index=22}
+   After training, evaluation is performed on the **original (unbalanced) test set** by computing probability outputs, converting them to binary predictions with a **0.5 threshold**, and reporting overall (weighted) and per-label metrics. Performance is further analyzed with **confusion matrices**, **ROC** curves and **Precision–Recall** curves (especially informative under heavy imbalance). The project also implements a small inference utility that takes an arbitrary text comment, applies the same **cleaning and vectorization** pipeline, runs the model to obtain probabilities and binary decisions, and visualizes label probabilities in a bar chart with a horizontal threshold line.
 
 ---
 
 ## Tech stack
+
+- **Python**
+- **TensorFlow / Keras** (TextVectorization, Embedding, Bidirectional GRU, training, saving/loading)
+- **NLTK** (stopwords)
+- **iterative-stratification** (MultilabelStratifiedShuffleSplit)
+- **scikit-learn** (metrics, confusion matrices, ROC/PR curves)
+- **MLSMOTE utility** (multi-label oversampling)
