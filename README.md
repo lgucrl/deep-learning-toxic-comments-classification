@@ -1,6 +1,6 @@
 # Deep Learning multi-label classification of online toxic comments
 
-This deep learning project builds a detection and classification system for **toxic comments** on social platforms: given an online comment, the model predicts whether it contains one or more types of toxicity. The classifier is implemented in **Python** using **TensorFlow/Keras** and outputs a **6-dimensional vector of binary labels** (one per toxicity category). 
+This deep learning project builds a detection and classification system for **toxic comments** on social platforms: given an online comment, the model predicts whether it contains one or more types of toxicity. The classifier is implemented in **Python** using **TensorFlow/Keras** and outputs a **6-dimensional vector of binary labels** (one per toxicity category). The full project can be found in the [`comments_toxicity_dl.ipynb`](https://github.com/lgucrl/deep-learning-toxic-comments-classification/blob/main/comments_toxicity_dl.ipynb) notebook.
 
 ---
 
